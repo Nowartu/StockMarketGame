@@ -1,0 +1,6 @@
+*.pyc
+.django-venv
+.idea
+schema db.drawio
+.$schema db.drawio.bkp
+*.sqlite3
