@@ -23,7 +23,11 @@ class Order(models.Model):
     user = models.ForeignKey('users.UserProfile', on_delete=models.CASCADE)
     done = models.BooleanField(default=False)
 
-    type = models.CharField(max_length=4)
+    class OrderType(models.TextChoices):
+        BUY = 'BUY', 'Buy'
+        SELL = 'SELL', 'Sell'
+
+    type = models.CharField(max_length=4, choices=OrderType.choices)
 
     amount = models.IntegerField()
     available = models.IntegerField()

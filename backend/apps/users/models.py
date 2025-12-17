@@ -14,3 +14,4 @@ class UserStock(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     company = models.ForeignKey("market.Company", on_delete=models.CASCADE)
     amount = models.IntegerField()
+    available = models.IntegerField()
