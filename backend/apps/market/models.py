@@ -22,6 +22,8 @@ class Order(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     user = models.ForeignKey('users.UserProfile', on_delete=models.CASCADE)
     done = models.BooleanField(default=False)
+    canceled = models.BooleanField(default=False)
+    canceled_at = models.DateTimeField(default=None, null=True)
 
     class OrderType(models.TextChoices):
         BUY = 'BUY', 'Buy'
