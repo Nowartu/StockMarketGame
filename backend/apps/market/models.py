@@ -15,7 +15,7 @@ class Company(models.Model):
     value = models.FloatField()
 
     def __str__(self):
-        return self.name
+        return f'{self.full_name} ({self.name})'
 
 
 class Order(models.Model):
@@ -37,6 +37,9 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     valid_to = models.DateTimeField()
 
+    def __str__(self):
+        return f'{self.type} {self.amount} {self.user.nickname} {self.company.name}'
+
 
 class Transaction(models.Model):
     order_1 = models.ForeignKey(Order, related_name="order_1", on_delete=models.CASCADE)
@@ -47,4 +50,5 @@ class Transaction(models.Model):
 
     executed_ad = models.DateTimeField(auto_now_add=True, blank=True)
 
-
+    def __str__(self):
+        return f'{self.order_1} - {self.order_2}'
