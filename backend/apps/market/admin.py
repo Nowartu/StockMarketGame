@@ -8,12 +8,8 @@ class CompanyAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['username', 'company_name', 'type', 'amount', 'price']
-
-    def username(self, obj):
-        return obj.user.nickname
-
-    def company_name(self, obj):
-        return obj.company.name
+    list_display = ['user', 'company', 'done', 'canceled', 'type', 'amount', 'available', 'price', 'created_at']
+    list_filter = ['done', 'canceled']
+    search_fields = ["user__nickname", 'company__name', "type"]
 
 admin.site.register(Transaction)
