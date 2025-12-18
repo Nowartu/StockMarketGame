@@ -15,3 +15,11 @@ class UserStock(models.Model):
     company = models.ForeignKey("market.Company", on_delete=models.CASCADE)
     amount = models.IntegerField()
     available = models.IntegerField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['company', 'user'],
+                name='unique_user_company'
+            )
+        ]
