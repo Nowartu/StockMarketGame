@@ -3,6 +3,8 @@ from rest_framework import serializers
 from .models import Order
 from django.db import transaction
 from ..users.models import UserProfile
+from django.utils import timezone
+from datetime import timedelta
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -23,11 +25,18 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data['available'] = data['amount']
+        if data.get("valid_to"):
+            data['valid_to'] = timezone.now() + timedelta(hours=24)
+
         profile = self.context['request'].user.userprofile
         if data['type'] == Order.OrderType.BUY:
             cost = data['amount'] * data['price']
             if profile.balance - profile.blocked_balance < cost:
                 raise serializers.ValidationError("Insufficient funds!!!")
+        elif data['type'] == Order.OrderType.SELL:
+            user_stocks = profile.userstock_set.filter(company=data['company']).first()
+            if user_stocks.amount < data['amount']:
+                raise serializers.ValidationError("User do not have that much stocks.")
         return data
 
     def validate_amount(self, value):
@@ -38,6 +47,11 @@ class OrderSerializer(serializers.ModelSerializer):
     def validate_price(self, value):
         if value <= 0:
             raise serializers.ValidationError('Price must be > 0.')
+        return value
+
+    def validate_valid_to(self, value):
+        if value <= timezone.now():
+            raise serializers.ValidationError({"valid_to": 'Value must not be in the past.'})
         return value
 
     def create(self, validated_data):
