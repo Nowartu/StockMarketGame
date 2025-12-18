@@ -14,7 +14,7 @@ class UserStock(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     company = models.ForeignKey("market.Company", on_delete=models.CASCADE)
     amount = models.IntegerField()
-    available = models.IntegerField()
+    blocked = models.IntegerField()
 
     class Meta:
         constraints = [
@@ -23,3 +23,6 @@ class UserStock(models.Model):
                 name='unique_user_company'
             )
         ]
+
+    def __str__(self):
+        return f'{self.user} {self.company}'
