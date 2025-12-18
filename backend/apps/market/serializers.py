@@ -1,33 +1,26 @@
-from django.contrib.auth.models import Group, User
 from rest_framework import serializers
 from .models import Order
 from django.db import transaction
-from ..users.models import UserProfile
+from ..users.models import UserProfile, UserStock
 from django.utils import timezone
 from datetime import timedelta
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = User
-        fields = ["url", "username", "email", "groups"]
-
-
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Group
-        fields = ["url", "name"]
-
 
 class OrderSerializer(serializers.ModelSerializer):
+    canceled = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Order
-        fields = ['company', 'type', 'amount', 'price', 'valid_to']
+        fields = ['company', 'type', 'amount', 'price', 'valid_to', 'canceled']
+        read_only_fields = ['cancelled']
+
+    def get_canceled(self, obj):
+        return obj.canceled
 
     def validate(self, data):
         data['available'] = data['amount']
-        if data.get("valid_to"):
+        if not data.get("valid_to"):
             data['valid_to'] = timezone.now() + timedelta(hours=24)
-
+        print(self.context['request'])
         profile = self.context['request'].user.userprofile
         if data['type'] == Order.OrderType.BUY:
             cost = data['amount'] * data['price']
@@ -35,7 +28,7 @@ class OrderSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Insufficient funds!!!")
         elif data['type'] == Order.OrderType.SELL:
             user_stocks = profile.userstock_set.filter(company=data['company']).first()
-            if user_stocks.amount < data['amount']:
+            if user_stocks.amount - user_stocks.blocked < data['amount']:
                 raise serializers.ValidationError("User do not have that much stocks.")
         return data
 
@@ -58,21 +51,38 @@ class OrderSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         profile = user.userprofile
 
-        with transaction.atomic():
-            profile = UserProfile.objects.select_for_update().get(pk=profile.pk)
-            cost = validated_data['amount'] * validated_data['price']
+        if validated_data['type'] == Order.OrderType.BUY:
+            with transaction.atomic():
+                profile = UserProfile.objects.select_for_update().get(pk=profile.pk)
+                cost = validated_data['amount'] * validated_data['price']
 
-            if profile.balance - profile.blocked_balance < cost:
-                raise serializers.ValidationError("Insufficient funds.")
+                if profile.balance - profile.blocked_balance < cost:
+                    raise serializers.ValidationError("Insufficient funds.")
 
-            profile.blocked_balance += cost
-            profile.save(update_fields=['blocked_balance'])
+                profile.blocked_balance += cost
+                profile.save(update_fields=['blocked_balance'])
 
-            order = Order.objects.create(
-                user=profile,
-                **validated_data
-            )
+                order = Order.objects.create(
+                    user=profile,
+                    **validated_data
+                )
 
-            return order
+                return order
+        elif validated_data['type'] == Order.OrderType.SELL:
+            with transaction.atomic():
+                user_stocks = UserStock.objects.select_for_update().get(company=validated_data['company'], pk=profile.pk)
+
+                if user_stocks.amount - user_stocks.blocked < validated_data['amount']:
+                    raise serializers.ValidationError("Insufficient stocks.")
+
+                user_stocks.blocked += validated_data['amount']
+                user_stocks.save(update_fields=['blocked'])
+
+                order = Order.objects.create(
+                    user=profile,
+                    **validated_data
+                )
+
+                return order
 
 

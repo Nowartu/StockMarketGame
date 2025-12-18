@@ -1,40 +1,30 @@
-from django.contrib.auth.models import Group, User
-from django.template.context_processors import request
+from django.utils import timezone
 from rest_framework import permissions, viewsets, status
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from .serializers import GroupSerializer, UserSerializer, OrderSerializer
+from rest_framework.permissions import BasePermission
+from .serializers import OrderSerializer
 from .models import Order
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
-
-    queryset = User.objects.all().order_by("-date_joined")
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-
-    queryset = Group.objects.all().order_by("name")
-    serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
+class IsOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.user.user == request.user
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user.userprofile)
+        return Order.objects.all()
 
-    def post(self, request):
-        serializer = OrderSerializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
+    def perform_create(self, serializer):
         order = serializer.save()
 
         return Response({'order_id': order.id, "status": 'accepted'}, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        instance.canceled = True
+        instance.canceled_at = timezone.now()
+        instance.save()
+
+        return Response({'order_id': instance.pk, "status": 'accepted'}, status=status.HTTP_204_NO_CONTENT)
