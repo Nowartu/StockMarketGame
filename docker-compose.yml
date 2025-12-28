@@ -8,6 +8,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgres/data
+    ports:
+      - "5432:5431"
     restart: unless-stopped
 
   rabbitmq:
@@ -33,6 +35,7 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
@@ -45,6 +48,7 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
       GF_PATHS_PROVISIONING: /etc/grafana/
+    restart: unless-stopped
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -56,7 +60,17 @@ services:
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    restart: unless-stopped
 
+  redis:
+    image: redis:latest
+    container_name: redis
+    command : ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    ports:
+      - '6379:6379'
+    env_file:
+      - .env
+    restart: unless-stopped
 
 
 volumes:
