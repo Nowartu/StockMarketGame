@@ -19,6 +19,9 @@ class Company(models.Model):
     market_value = models.FloatField()
     value = models.FloatField()
 
+    def __str__(self):
+        return f'{self.name}'
+
 
 class Stock(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
@@ -30,7 +33,7 @@ class Stock(models.Model):
     max_price = models.DecimalField(max_digits=12, decimal_places=4)
     volume = models.IntegerField()
     transactions_no = models.IntegerField()
-    turnover = models.IntegerField()
+    turnover = models.BigIntegerField()
 
     class Meta:
         constraints = [
@@ -39,6 +42,9 @@ class Stock(models.Model):
                 name='unique_company_daily_price'
             )
         ]
+
+    def __str__(self):
+        return f'{self.date} {self.company}'
 
 
 
