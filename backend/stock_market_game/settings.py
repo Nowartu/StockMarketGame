@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "aaaa")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -89,9 +89,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv("POSTGRES_DB", 'stock_market_game'),
-        'USER': os.getenv("POSTGRES_USER"),
-        'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
-        'HOST': os.getenv("POSTGRES_HOST"),
+        'USER': os.getenv("POSTGRES_USER", 'postgres'),
+        'PASSWORD': os.getenv("POSTGRES_PASSWORD", 'admin'),
+        'HOST': os.getenv("POSTGRES_HOST", 'localhost'),
         'PORT': '5432'
     }
 }
@@ -139,3 +139,8 @@ REAL_MARKET_DATA_URLS = [
     os.getenv("STOCK_DOWNLOAD"),
     os.getenv("ETF_DOWNLOAD")
 ]
+
+REDIS_HOST = os.getenv("REDIS_HOST", 'localhost')
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB = int(os.getenv("REDIS_DB", 0))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", 'smg')

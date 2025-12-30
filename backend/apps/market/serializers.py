@@ -4,6 +4,8 @@ from django.db import transaction
 from ..users.models import UserProfile, UserStock
 from django.utils import timezone
 from datetime import timedelta
+from django.conf import settings
+import redis
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -62,12 +64,6 @@ class OrderSerializer(serializers.ModelSerializer):
                 profile.blocked_balance += cost
                 profile.save(update_fields=['blocked_balance'])
 
-                order = Order.objects.create(
-                    user=profile,
-                    **validated_data
-                )
-
-                return order
         elif validated_data['type'] == Order.OrderType.SELL:
             with transaction.atomic():
                 user_stocks = UserStock.objects.select_for_update().get(company=validated_data['company'], pk=profile.pk)
@@ -78,11 +74,20 @@ class OrderSerializer(serializers.ModelSerializer):
                 user_stocks.blocked += validated_data['amount']
                 user_stocks.save(update_fields=['blocked'])
 
-                order = Order.objects.create(
-                    user=profile,
-                    **validated_data
-                )
+        order = Order.objects.create(
+            user=profile,
+            **validated_data
+        )
 
-                return order
+        r = redis.Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.REDIS_DB,
+            password=settings.REDIS_PASSWORD
+        )
+
+        r.publish('new_order', order.pk)
+
+        return order
 
 
