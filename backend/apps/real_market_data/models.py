@@ -22,6 +22,9 @@ class Company(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+    class Meta:
+        db_table = '"real_market"."company"'
+
 
 class Stock(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
@@ -36,6 +39,7 @@ class Stock(models.Model):
     turnover = models.BigIntegerField()
 
     class Meta:
+        db_table = '"real_market"."stock"'
         constraints = [
             models.UniqueConstraint(
                 fields=['company', 'date'],
@@ -48,8 +52,11 @@ class Stock(models.Model):
 
 
 
+
 class Dividend(models.Model):
     company_id = models.ForeignKey(Company, on_delete=models.CASCADE)
     date = models.DateField()
 
     value = models.DecimalField(max_digits=12, decimal_places=4)
+    class Meta:
+        db_table = '"real_market"."dividend"'

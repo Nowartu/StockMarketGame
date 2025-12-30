@@ -10,6 +10,9 @@ class UserProfile(models.Model):
     def __str__(self):
         return f'{self.user.username} ({self.nickname})'
 
+    class Meta:
+        db_table = '"user"."userprofile"'
+
 class UserStock(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     company = models.ForeignKey("market.Company", on_delete=models.CASCADE)
@@ -17,6 +20,7 @@ class UserStock(models.Model):
     blocked = models.IntegerField()
 
     class Meta:
+        db_table = '"user"."userstock"'
         constraints = [
             models.UniqueConstraint(
                 fields=['company', 'user'],
