@@ -14,6 +14,9 @@ class Company(models.Model):
     market_value = models.FloatField()
     value = models.FloatField()
 
+    class Meta:
+        db_table = '"market"."company"'
+
     def __str__(self):
         return f'{self.full_name} ({self.name})'
 
@@ -37,6 +40,9 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     valid_to = models.DateTimeField()
 
+    class Meta:
+        db_table = '"market"."order"'
+
     def __str__(self):
         return f'{self.type} {self.amount} {self.user.nickname} {self.company.name}'
 
@@ -49,6 +55,9 @@ class Transaction(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=4)
 
     executed_ad = models.DateTimeField(auto_now_add=True, blank=True)
+
+    class Meta:
+        db_table = '"market"."transaction"'
 
     def __str__(self):
         return f'{self.order_1} - {self.order_2}'

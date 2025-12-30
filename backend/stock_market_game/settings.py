@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'apps.core',
     'daphne',
     'rest_framework',
     'django_celery_beat',
@@ -44,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.postgres',
 
-    'apps.core',
     'apps.users',
     'apps.market',
     'apps.real_market_data',
@@ -89,10 +89,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv("POSTGRES_DB", 'stock_market_game'),
-        'USER': os.getenv("POSTGRES_USER", 'postgres'),
-        'PASSWORD': os.getenv("POSTGRES_PASSWORD", 'admin'),
+        'USER': os.getenv("POSTGRES_USER", 'smg'),
+        'PASSWORD': os.getenv("POSTGRES_PASSWORD", 'smg'),
         'HOST': os.getenv("POSTGRES_HOST", 'localhost'),
-        'PORT': '5432'
+        'PORT': '5431',
+        'OPTIONS': {
+            'options': '-c search_path=django,public'
+        }
     }
 }
 
@@ -126,7 +129,7 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
