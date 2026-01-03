@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order
+from .models import Order, Company, Transaction
 from django.db import transaction
 from ..users.models import UserProfile, UserStock
 from django.utils import timezone
@@ -22,7 +22,6 @@ class OrderSerializer(serializers.ModelSerializer):
         data['available'] = data['amount']
         if not data.get("valid_to"):
             data['valid_to'] = timezone.now() + timedelta(hours=24)
-        print(self.context['request'])
         profile = self.context['request'].user.userprofile
         if data['type'] == Order.OrderType.BUY:
             cost = data['amount'] * data['price']
@@ -66,7 +65,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
         elif validated_data['type'] == Order.OrderType.SELL:
             with transaction.atomic():
-                user_stocks = UserStock.objects.select_for_update().get(company=validated_data['company'], pk=profile.pk)
+                user_stocks = UserStock.objects.select_for_update().get(company=validated_data['company'], user_id=profile.pk)
 
                 if user_stocks.amount - user_stocks.blocked < validated_data['amount']:
                     raise serializers.ValidationError("Insufficient stocks.")
@@ -91,3 +90,13 @@ class OrderSerializer(serializers.ModelSerializer):
         return order
 
 
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['name', 'full_name', 'sector', 'stock_no', 'market_value', 'value']
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ['order_1__type', 'order_2__type', 'amount', 'price', 'executed_at']
