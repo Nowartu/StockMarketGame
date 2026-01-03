@@ -48,13 +48,13 @@ class Order(models.Model):
 
 
 class Transaction(models.Model):
-    order_1 = models.ForeignKey(Order, related_name="order_1", on_delete=models.CASCADE)
-    order_2 = models.ForeignKey(Order, related_name="order_2", on_delete=models.CASCADE)
+    order_1 = models.ForeignKey(Order, related_name="transactions1", on_delete=models.CASCADE)
+    order_2 = models.ForeignKey(Order, related_name="transactions2", on_delete=models.CASCADE)
 
     amount = models.IntegerField()
     price = models.DecimalField(max_digits=12, decimal_places=4)
 
-    executed_ad = models.DateTimeField(auto_now_add=True, blank=True)
+    executed_at = models.DateTimeField(auto_now_add=True, blank=True)
 
     class Meta:
         db_table = '"market"."transaction"'
