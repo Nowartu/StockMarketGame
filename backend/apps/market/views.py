@@ -1,5 +1,5 @@
 from django.utils import timezone
-from rest_framework import permissions, viewsets, status
+from rest_framework import permissions, viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, DjangoModelPermissions
 from .serializers import OrderSerializer, CompanySerializer, TransactionSerializer
@@ -30,13 +30,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response({'order_id': instance.pk, "status": 'accepted'}, status=status.HTTP_204_NO_CONTENT)
 
 
-class CompanyViewSet(viewsets.ModelViewSet):
+class CompanyList(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
     permission_classes = [DjangoModelPermissions]
 
 
-class TransactionViewSet(viewsets.ModelViewSet):
+class TransactionList(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = TransactionSerializer
     permission_classes = [DjangoModelPermissions]
     def get_queryset(self):
