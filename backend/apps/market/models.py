@@ -61,3 +61,24 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f'{self.order_1} - {self.order_2}'
+
+
+class Stock(models.Model):
+    company = models.ForeignKey(Company, related_name="stock", on_delete=models.CASCADE)
+    date = models.DateField()
+
+    open_price = models.DecimalField(max_digits=12, decimal_places=4)
+    close_price = models.DecimalField(max_digits=12, decimal_places=4)
+    min_price = models.DecimalField(max_digits=12, decimal_places=4)
+    max_price = models.DecimalField(max_digits=12, decimal_places=4)
+    volume = models.IntegerField()
+    transactions_no = models.IntegerField()
+
+    class Meta:
+        db_table = '"market"."stock"'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['company', 'date'],
+                name='unique_market_company_daily_price'
+            )
+        ]
