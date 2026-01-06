@@ -1,7 +1,7 @@
 from database.base import Base
 
-Company = Base.classes.market_company
-Order = Base.classes.market_order
-Transaction = Base.classes.market_transaction
-UserProfile = Base.classes.users_userprofile
-UserStock = Base.classes.users_userstock
+Company = Base.classes.company
+Order = Base.classes.order
+Transaction = Base.classes.transaction
+UserProfile = Base.classes.userprofile
+UserStock = Base.classes.userstock
