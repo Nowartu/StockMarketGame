@@ -2,13 +2,32 @@ from django.utils import timezone
 from rest_framework import permissions, viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, DjangoModelPermissions
-from .serializers import OrderSerializer, CompanySerializer, TransactionSerializer
+from .serializers import OrderSerializer, CompanySerializer, TransactionSerializer, ProfileSerializer, UserStockSerializer
 from .models import Order, Company, Transaction
 from django.db.models import Q
+
+from ..users.models import UserProfile, UserStock
+
 
 class IsOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.user.user == request.user
+
+
+class ProfileList(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = ProfileSerializer
+    permission_classes = [IsOwner, DjangoModelPermissions]
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(user=self.request.user)
+
+class UserStockList(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = UserStockSerializer
+    permission_classes = [IsOwner, DjangoModelPermissions]
+
+    def get_queryset(self):
+        return UserStock.objects.filter(user=self.request.user.userprofile)
+
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer

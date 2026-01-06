@@ -9,9 +9,24 @@ import redis
 from django.db.models import Q
 
 
+class ProfileSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['nickname', 'balance', 'blocked_balance']
+
+
+class UserStockSerializer(serializers.HyperlinkedModelSerializer):
+    company = serializers.PrimaryKeyRelatedField(read_only=True)
+    company_name = serializers.CharField(source="company.name")
+    class Meta:
+        model = UserStock
+        fields = ['company', 'company_name', 'amount', 'blocked']
+
+
 class OrderSerializer(serializers.HyperlinkedModelSerializer):
     canceled = serializers.SerializerMethodField(read_only=True)
     transactions = serializers.SerializerMethodField(read_only=True)
+    available = serializers.IntegerField(read_only=True)
     class Meta:
         model = Order
         fields = ['url', 'company', 'type', 'amount', 'available', 'price', 'valid_to', 'canceled', 'transactions']
@@ -34,7 +49,7 @@ class OrderSerializer(serializers.HyperlinkedModelSerializer):
             if profile.balance - profile.blocked_balance < cost:
                 raise serializers.ValidationError("Insufficient funds!!!")
         elif data['type'] == Order.OrderType.SELL:
-            user_stocks = profile.userstock_set.filter(company=data['company']).first()
+            user_stocks = profile.userstock.filter(company=data['company']).first()
             if user_stocks.amount - user_stocks.blocked < data['amount']:
                 raise serializers.ValidationError("User do not have that much stocks.")
         return data
