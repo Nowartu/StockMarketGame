@@ -97,6 +97,14 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class TransactionSerializer(serializers.ModelSerializer):
+    order = serializers.SerializerMethodField()
     class Meta:
         model = Transaction
-        fields = ['order_1__type', 'order_2__type', 'amount', 'price', 'executed_at']
+        fields = ['order', 'amount', 'price', 'executed_at']
+
+    def get_order(self, obj):
+        user = self.context['request'].user.userprofile
+        if obj.order_1.user == user:
+            return obj.order_1.pk
+        else:
+            return obj.order_2.pk
