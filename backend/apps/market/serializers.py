@@ -119,16 +119,29 @@ class CompanySerializer(serializers.HyperlinkedModelSerializer):
 
 class TransactionSerializer(serializers.HyperlinkedModelSerializer):
     order = serializers.SerializerMethodField()
+    company = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+
+    _cache = None
     class Meta:
         model = Transaction
-        fields = ['url', 'order', 'amount', 'price', 'executed_at']
+        fields = ['url', 'order', 'company', 'type', 'amount', 'price', 'executed_at']
 
-    def get_order(self, obj):
+    def _get_order(self, obj):
         user = self.context['request'].user.userprofile
         if obj.order_1.user == user:
-            return obj.order_1.pk
+            return obj.order_1
         else:
-            return obj.order_2.pk
+            return obj.order_2
+
+    def get_order(self, obj):
+        return self._get_order(obj).pk
+
+    def get_company(self, obj):
+        return self._get_order(obj).company.name
+
+    def get_type(self, obj):
+        return self._get_order(obj).type
 
 
 class TransactionSimpleSerializer(serializers.HyperlinkedModelSerializer):
