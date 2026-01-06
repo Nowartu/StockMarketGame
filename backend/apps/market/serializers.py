@@ -6,17 +6,23 @@ from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
 import redis
+from django.db.models import Q
 
 
-class OrderSerializer(serializers.ModelSerializer):
+class OrderSerializer(serializers.HyperlinkedModelSerializer):
     canceled = serializers.SerializerMethodField(read_only=True)
+    transactions = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Order
-        fields = ['company', 'type', 'amount', 'price', 'valid_to', 'canceled']
+        fields = ['url', 'company', 'type', 'amount', 'available', 'price', 'valid_to', 'canceled', 'transactions']
         read_only_fields = ['cancelled']
 
     def get_canceled(self, obj):
         return obj.canceled
+
+    def get_transactions(self, obj):
+        qs = Transaction.objects.filter(Q(order_1=obj) | Q(order_2=obj))
+        return TransactionSimpleSerializer(qs, many=True, context={'request': self.context['request']}).data
 
     def validate(self, data):
         data['available'] = data['amount']
@@ -90,17 +96,17 @@ class OrderSerializer(serializers.ModelSerializer):
         return order
 
 
-class CompanySerializer(serializers.ModelSerializer):
+class CompanySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Company
-        fields = ['name', 'full_name', 'sector', 'stock_no', 'market_value', 'value']
+        fields = ['url', 'name', 'full_name', 'sector', 'stock_no', 'market_value', 'value']
 
 
-class TransactionSerializer(serializers.ModelSerializer):
+class TransactionSerializer(serializers.HyperlinkedModelSerializer):
     order = serializers.SerializerMethodField()
     class Meta:
         model = Transaction
-        fields = ['order', 'amount', 'price', 'executed_at']
+        fields = ['url', 'order', 'amount', 'price', 'executed_at']
 
     def get_order(self, obj):
         user = self.context['request'].user.userprofile
@@ -108,3 +114,9 @@ class TransactionSerializer(serializers.ModelSerializer):
             return obj.order_1.pk
         else:
             return obj.order_2.pk
+
+
+class TransactionSimpleSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ['url', 'price', 'amount', 'executed_at']
