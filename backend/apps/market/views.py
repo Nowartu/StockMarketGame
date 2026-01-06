@@ -34,7 +34,9 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwner, DjangoModelPermissions]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user.userprofile, done=False, canceled=False)
+        done = self.request.query_params.get('done', False)
+        canceled = self.request.query_params.get('canceled', False)
+        return Order.objects.filter(user=self.request.user.userprofile, done=done, canceled=canceled)
 
     def perform_create(self, serializer):
         order = serializer.save()
