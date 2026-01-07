@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Company, Order, Transaction
+from .models import Company, Order, Transaction, Stock
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
@@ -11,5 +11,11 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ['user', 'company', 'done', 'canceled', 'type', 'amount', 'available', 'price', 'created_at']
     list_filter = ['done', 'canceled']
     search_fields = ["user__nickname", 'company__name', "type"]
+
+
+@admin.register(Stock)
+class StockAdmin(admin.ModelAdmin):
+    list_display = ['company', 'date', 'open_price', 'close_price', 'min_price', 'max_price']
+
 
 admin.site.register(Transaction)
