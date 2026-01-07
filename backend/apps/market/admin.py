@@ -18,4 +18,6 @@ class StockAdmin(admin.ModelAdmin):
     list_display = ['company', 'date', 'open_price', 'close_price', 'min_price', 'max_price']
 
 
-admin.site.register(Transaction)
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ["order_1__company", "order_1__user", "order_2__user", 'amount', 'price', 'executed_at']
