@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, Company, Transaction
+from .models import Order, Company, Transaction, Stock
 from django.db import transaction
 from ..users.models import UserProfile, UserStock
 from django.utils import timezone
@@ -148,3 +148,9 @@ class TransactionSimpleSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Transaction
         fields = ['url', 'price', 'amount', 'executed_at']
+
+
+class StockSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Stock
+        fields = ['url', 'date', 'company', 'open_price', 'close_price', 'min_price', 'max_price', 'volume', 'transactions_no']
