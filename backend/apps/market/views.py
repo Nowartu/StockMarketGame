@@ -2,11 +2,12 @@ from django.utils import timezone
 from rest_framework import permissions, viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, DjangoModelPermissions
-from .serializers import OrderSerializer, CompanySerializer, TransactionSerializer, ProfileSerializer, UserStockSerializer
-from .models import Order, Company, Transaction
+from .serializers import OrderSerializer, CompanySerializer, TransactionSerializer, ProfileSerializer, UserStockSerializer, StockSerializer
+from .models import Order, Company, Transaction, Stock
 from django.db.models import Q
 
 from ..users.models import UserProfile, UserStock
+from datetime import date
 
 
 class IsOwner(BasePermission):
@@ -66,3 +67,12 @@ class TransactionList(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets
         transactions = [x.transactions1 for x in orders]
         transactions += [x.transactions2 for x in orders]
         return Transaction.objects.filter(Q(order_1__user=user) | Q(order_2__user=user)).all()
+
+
+class StockList(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = StockSerializer
+    permissions = [DjangoModelPermissions]
+
+    def get_queryset(self):
+        d = self.request.query_params.get('date', date.today())
+        return Stock.objects.filter(date=d)
