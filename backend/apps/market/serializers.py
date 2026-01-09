@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Order, Company, Transaction, Stock
+from apps.events.models import Event
 from django.db import transaction
 from ..users.models import UserProfile, UserStock
 from django.utils import timezone
@@ -97,6 +98,20 @@ class OrderSerializer(serializers.HyperlinkedModelSerializer):
         order = Order.objects.create(
             user=profile,
             **validated_data
+        )
+
+
+        event = Event.objects.create(
+            type="NEW ORDER",
+            source="ORDER",
+            reference_id=order.pk,
+            payload={
+                "user": profile.nickname,
+                "price": float(validated_data["price"]),
+                "amount": validated_data["amount"],
+                "type": validated_data["type"],
+                "company": validated_data['company'].name
+            }
         )
 
         r = redis.Redis(
