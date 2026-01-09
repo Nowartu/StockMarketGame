@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, DjangoModelPermissions
 from .serializers import OrderSerializer, CompanySerializer, TransactionSerializer, ProfileSerializer, UserStockSerializer, StockSerializer
 from .models import Order, Company, Transaction, Stock
+from apps.events.models import Event
 from django.db.models import Q
 
 from ..users.models import UserProfile, UserStock
@@ -48,6 +49,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         instance.canceled = True
         instance.canceled_at = timezone.now()
         instance.save()
+
+        event = Event.objects.create(
+            type="CANCEL ORDER",
+            source="ORDER",
+            reference_id=instance.pk,
+            payload={
+                "user": instance.user.nickname,
+            }
+        )
 
         return Response({'order_id': instance.pk, "status": 'accepted'}, status=status.HTTP_204_NO_CONTENT)
 
