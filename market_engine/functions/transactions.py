@@ -25,8 +25,8 @@ def make_transaction(db, order1, order2):
     update_order(order_buy, amount)
     update_order(order_sell, amount)
 
-    update_user_profile(user_buy, price*amount, True)
-    update_user_profile(user_sell, price*amount, False)
+    update_user_profile(user_buy, order_buy.price, order_sell.price, amount, True)
+    update_user_profile(user_sell, order_buy.price, order_sell.price, amount, False)
 
     us = update_user_stock(user_buy_stock, user_buy.id, order_buy.company_id, amount, True)
     update_user_stock(user_sell_stock, user_sell.id, order_sell.company_id, amount, False)
@@ -40,12 +40,12 @@ def make_transaction(db, order1, order2):
     db.commit()
 
 
-def update_user_profile(user_profile, price, buy):
+def update_user_profile(user_profile, buy_price, sell_price, amount, buy):
     if buy:
-        user_profile.balance -= price
-        user_profile.blocked_balance -= price
+        user_profile.balance -= (buy_price + sell_price) / 2 * amount
+        user_profile.blocked_balance -= buy_price * amount
     else:
-        user_profile.balance += price
+        user_profile.balance += (buy_price + sell_price) / 2 * amount
 
 
 def update_user_stock(user_stock, user_id, company, amount, buy):
@@ -78,6 +78,6 @@ def add_transaction(order_buy, order_sell, amount, price):
         order_2_id=order_sell.id,
         amount=amount,
         price=price,
-        executed_ad=datetime.datetime.now()
+        executed_at=datetime.datetime.now()
     )
     return t

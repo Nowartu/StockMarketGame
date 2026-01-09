@@ -35,4 +35,4 @@ def match_orders(db, company_id):
                 if order_buy.price >= order_sell.price:
                     return [order_buy.id, order_sell.id]
     else:
-        return None
+        return None, None
