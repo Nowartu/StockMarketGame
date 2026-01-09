@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
                 CREATE SCHEMA IF NOT EXISTS "user";
                 CREATE SCHEMA IF NOT EXISTS "market";
                 CREATE SCHEMA IF NOT EXISTS "real_market";
+                CREATE SCHEMA IF NOT EXISTS "event";
                 
                 ALTER TABLE auth_group SET SCHEMA "django";
                 ALTER TABLE auth_group_permissions SET SCHEMA "django";
