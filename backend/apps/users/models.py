@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="userprofile")
     nickname = models.CharField(max_length=50, unique=True)
     balance = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     blocked_balance = models.DecimalField(max_digits=14, decimal_places=2, default=0)
@@ -14,8 +14,8 @@ class UserProfile(models.Model):
         db_table = '"user"."userprofile"'
 
 class UserStock(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    company = models.ForeignKey("market.Company", on_delete=models.CASCADE)
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="userstock")
+    company = models.ForeignKey("market.Company", on_delete=models.CASCADE, related_name="userstock")
     amount = models.IntegerField()
     blocked = models.IntegerField()
 
