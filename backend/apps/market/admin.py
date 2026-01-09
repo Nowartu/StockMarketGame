@@ -15,7 +15,9 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Stock)
 class StockAdmin(admin.ModelAdmin):
-    list_display = ['company', 'date', 'open_price', 'close_price', 'min_price', 'max_price']
+    list_display = ['date', 'company', 'open_price', 'close_price', 'min_price', 'max_price']
+    list_filter = ['date']
+    search_fields = ["company__name"]
 
 
 @admin.register(Transaction)
