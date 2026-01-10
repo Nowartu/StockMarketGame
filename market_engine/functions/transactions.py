@@ -1,10 +1,10 @@
 import datetime
 from sqlalchemy import select, and_
 from database.models import Order, Transaction, UserStock, UserProfile, Event
+import json
 
 
-
-def make_transaction(db, order1, order2):
+def make_transaction(db, order1, order2, price_change_pub):
     order_buy = db.execute(select(Order).where(Order.id == order1).with_for_update()).scalar_one_or_none()
     order_sell = db.execute(select(Order).where(Order.id == order2).with_for_update()).scalar_one_or_none()
 
@@ -57,6 +57,8 @@ def make_transaction(db, order1, order2):
     )
     db.add(e)
     db.commit()
+
+    price_change_pub.publish("new_price", json.dumps({"company": order_buy.company_id, "price": float(price)}))
 
 
 def update_user_profile(user_profile, buy_price, sell_price, amount, buy):
