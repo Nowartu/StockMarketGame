@@ -1,12 +1,12 @@
 from django.utils import timezone
-from rest_framework import permissions, viewsets, status, mixins
+from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, DjangoModelPermissions
 from .serializers import OrderSerializer, CompanySerializer, TransactionSerializer, ProfileSerializer, UserStockSerializer, StockSerializer
 from .models import Order, Company, Transaction, Stock
 from apps.events.models import Event
 from django.db.models import Q
-
+from django.db import transaction
 from ..users.models import UserProfile, UserStock
 from datetime import date
 
@@ -46,18 +46,29 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response({'order_id': order.id, "status": 'accepted'}, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
-        instance.canceled = True
-        instance.canceled_at = timezone.now()
-        instance.save()
+        with transaction.atomic():
+            profile = instance.user
+            if instance.type == "BUY":
+                profile.blocked_balance -= instance.available * instance.price
+                profile.save(update_fields=["blocked_balance"])
 
-        event = Event.objects.create(
-            type="CANCEL ORDER",
-            source="ORDER",
-            reference_id=instance.pk,
-            payload={
-                "user": instance.user.nickname,
-            }
-        )
+            elif instance.type == "SELL":
+                user_stock = profile.userstock.get(company=instance.company)
+                user_stock.blocked -= instance.available
+                user_stock.save(update_fields=['blocked'])
+
+            instance.canceled = True
+            instance.canceled_at = timezone.now()
+            instance.save()
+
+            event = Event.objects.create(
+                type="CANCEL ORDER",
+                source="ORDER",
+                reference_id=instance.pk,
+                payload={
+                    "user": instance.user.nickname,
+                }
+            )
 
         return Response({'order_id': instance.pk, "status": 'accepted'}, status=status.HTTP_204_NO_CONTENT)
 
