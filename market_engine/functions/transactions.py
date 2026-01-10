@@ -1,6 +1,8 @@
 import datetime
 from sqlalchemy import select, and_
-from database.models import Order, Transaction, UserStock, UserProfile
+from database.models import Order, Transaction, UserStock, UserProfile, Event
+
+
 
 def make_transaction(db, order1, order2):
     order_buy = db.execute(select(Order).where(Order.id == order1).with_for_update()).scalar_one_or_none()
@@ -39,6 +41,23 @@ def make_transaction(db, order1, order2):
 
     db.commit()
 
+    e = Event(
+        type="NEW TRANSACTION",
+        source="TRANSACTION",
+        reference_id=t.id,
+        payload={
+            "order_buy": order_buy.id,
+            "user_buy": order_buy.user_id,
+            "order_sell": order_sell.id,
+            "user_sell": order_sell.user_id,
+            "company": order_buy.company_id,
+            "price": float(price),
+            "amount": amount
+        }
+    )
+    db.add(e)
+    db.commit()
+
 
 def update_user_profile(user_profile, buy_price, sell_price, amount, buy):
     if buy:
@@ -53,12 +72,14 @@ def update_user_stock(user_stock, user_id, company, amount, buy):
         if user_stock is not None:
             user_stock.amount += amount
         else:
-            return UserStock(
+            us = UserStock(
                 amount=amount,
                 company_id=company,
                 user_id=user_id,
                 blocked=0
             )
+
+            return us
     else:
         user_stock.blocked -= amount
         user_stock.amount -= amount
@@ -80,4 +101,5 @@ def add_transaction(order_buy, order_sell, amount, price):
         price=price,
         executed_at=datetime.datetime.now()
     )
+
     return t

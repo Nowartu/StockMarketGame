@@ -5,3 +5,4 @@ Order = Base.classes.order
 Transaction = Base.classes.transaction
 UserProfile = Base.classes.userprofile
 UserStock = Base.classes.userstock
+Event = Base.classes.events
