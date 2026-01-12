@@ -73,5 +73,15 @@ services:
     restart: unless-stopped
 
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - /etc/nginx/conf.d/default.conf:/nginx/nginx.conf:ro
+    restart: unless-stopped
+
+
 volumes:
   postgres_data:
