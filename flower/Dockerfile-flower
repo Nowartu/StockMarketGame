@@ -1,0 +1,7 @@
+FROM python:3.14-alpine
+WORKDIR /app
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+ARG CELERY_URL
+ENV CELERY_URL=${CELERY_URL}
+CMD ["sh", "-c", "celery --broker=$CELERY_URL flower"]
