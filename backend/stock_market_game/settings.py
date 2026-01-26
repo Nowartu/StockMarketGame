@@ -150,9 +150,10 @@ REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", 'smg')
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
         "CONFIG": {
             "hosts": [f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"],
+            "serializer_format": "json",
         },
     },
 }
