@@ -92,7 +92,7 @@ DATABASES = {
         'USER': os.getenv("POSTGRES_USER", 'smg'),
         'PASSWORD': os.getenv("POSTGRES_PASSWORD", 'smg'),
         'HOST': os.getenv("POSTGRES_HOST", 'localhost'),
-        'PORT': '5431',
+        'PORT': os.getenv("POSTGRES_PORT", '5431'),
         'OPTIONS': {
             'options': '-c search_path=django,public'
         }
@@ -135,8 +135,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
-CELERY_BROKER_URL = "amqp://rmq:rmq@localhost:5672"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+CELERY_BROKER_URL = "amqp://rmq:rmq@rabbitmq:5672"
 
 REAL_MARKET_DATA_URLS = [
     os.getenv("STOCK_DOWNLOAD"),
