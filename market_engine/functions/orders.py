@@ -10,7 +10,9 @@ def check_if_available(db):
     ).where(and_(
         Order.done == False,
         Order.canceled == False,
-    ))
+    )).group_by(
+        Order.company_id
+    )
 
     return db.execute(orders).scalars().all()
 
