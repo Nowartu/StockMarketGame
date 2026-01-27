@@ -1,6 +1,6 @@
 import datetime
 from sqlalchemy import select, and_
-from database.models import Order, Transaction, UserStock, UserProfile, Event
+from database.models import Order, Transaction, UserStock, UserProfile, Event, Company
 import json
 
 
@@ -11,14 +11,16 @@ def make_transaction(db, order1, order2, price_change_pub):
     user_buy = db.execute(select(UserProfile).where(UserProfile.id == order_buy.user_id).with_for_update()).scalar_one_or_none()
     user_sell = db.execute(select(UserProfile).where(UserProfile.id == order_sell.user_id).with_for_update()).scalar_one_or_none()
 
+    company = db.execute(select(Company).where(Company.id == order_buy.company_id)).scalar_one_or_none()
+
     user_buy_stock = db.execute(select(UserStock).where(and_(
         UserStock.user_id == order_buy.user_id,
-        UserStock.company_id == order_buy.company_id
+        UserStock.company_id == company.id
     )).with_for_update()).scalar_one_or_none()
 
     user_sell_stock = db.execute(select(UserStock).where(and_(
         UserStock.user_id == order_sell.user_id,
-        UserStock.company_id == order_sell.company_id
+        UserStock.company_id == company.id
     )).with_for_update()).scalar_one_or_none()
 
     amount = min(order_buy.available, order_sell.available)
@@ -30,8 +32,8 @@ def make_transaction(db, order1, order2, price_change_pub):
     update_user_profile(user_buy, order_buy.price, order_sell.price, amount, True)
     update_user_profile(user_sell, order_buy.price, order_sell.price, amount, False)
 
-    us = update_user_stock(user_buy_stock, user_buy.id, order_buy.company_id, amount, True)
-    update_user_stock(user_sell_stock, user_sell.id, order_sell.company_id, amount, False)
+    us = update_user_stock(user_buy_stock, user_buy.id, company.id, amount, True)
+    update_user_stock(user_sell_stock, user_sell.id, company.id, amount, False)
 
     if us is not None:
         db.add(us)
@@ -50,7 +52,7 @@ def make_transaction(db, order1, order2, price_change_pub):
             "user_buy": order_buy.user_id,
             "order_sell": order_sell.id,
             "user_sell": order_sell.user_id,
-            "company": order_buy.company_id,
+            "company": company.name,
             "price": float(price),
             "amount": amount
         }
@@ -58,7 +60,18 @@ def make_transaction(db, order1, order2, price_change_pub):
     db.add(e)
     db.commit()
 
-    price_change_pub.publish("new_price", json.dumps({"company": order_buy.company_id, "price": float(price)}))
+    price_change_pub.publish(
+        f"asgi__group__stock_{company.name}",
+        json.dumps({"type": "stock_update", "company": company.name, "price": float(price)})
+    )
+    price_change_pub.publish(
+        f"asgi__group__user_{user_buy.nickname}",
+        json.dumps({"type": "order_update", "order": order_buy.id, "amount": amount})
+    )
+    price_change_pub.publish(
+        f"asgi__group__user_{user_sell.nickname}",
+        json.dumps({"type": "order_update", "order": order_sell.id, "amount": amount})
+    )
 
 
 def update_user_profile(user_profile, buy_price, sell_price, amount, buy):
