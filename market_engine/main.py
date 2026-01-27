@@ -6,7 +6,7 @@ from functions.transactions import make_transaction
 
 def main():
 
-    price_change_pub = get_connection()
+    pubsub_update = get_connection()
     new_order = get_connection()
     new_order_sub = new_order.pubsub()
     new_order_sub.subscribe("new_order")
@@ -18,7 +18,7 @@ def main():
                 order_1, order_2 = match_orders(db, 1)
                 while order_1 is not None and order_2 is not None:
 
-                    make_transaction(db, order_1, order_2, price_change_pub)
+                    make_transaction(db, order_1, order_2, pubsub_update)
                     order_1, order_2 = match_orders(db, 1)
 
                     if order_1 is None or order_2 is None:
