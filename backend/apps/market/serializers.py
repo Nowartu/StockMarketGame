@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Order, Company, Transaction, Stock
 from apps.events.models import Event
 from django.db import transaction
-from ..users.models import UserProfile, UserStock
+from ..users.models import UserProfile, UserStock, UserBucket
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
@@ -132,6 +132,11 @@ class CompanySerializer(serializers.HyperlinkedModelSerializer):
         fields = ['url', 'name', 'full_name', 'sector', 'stock_no', 'market_value', 'value']
 
 
+class SimpleCompanySerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['url', 'pk', 'name']
+
 class TransactionSerializer(serializers.HyperlinkedModelSerializer):
     order = serializers.SerializerMethodField()
     company = serializers.SerializerMethodField()
@@ -169,3 +174,27 @@ class StockSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Stock
         fields = ['url', 'date', 'company', 'open_price', 'close_price', 'min_price', 'max_price', 'volume', 'transactions_no']
+
+
+class UserBucketSerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name="bucket-detail"
+    )
+
+    class Meta:
+        model = UserBucket
+        fields = ['url', 'name', 'companies']
+
+
+    def create(self, validated_data):
+        profile = self.context['request'].user.userprofile
+        existing_bucket = UserBucket.objects.filter(user=self.context['request'].user.userprofile, name=validated_data["name"]).first()
+        if existing_bucket is not None:
+            raise serializers.ValidationError("Bucket already exists.")
+
+        userbucket = UserBucket.objects.create(
+            user=profile,
+            name=validated_data['name']
+        )
+        userbucket.companies.set(validated_data['companies'])
+        return userbucket
