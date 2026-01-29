@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, UserStock
+from .models import UserProfile, UserStock, UserBucket
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -17,3 +17,8 @@ class UserStockAdmin(admin.ModelAdmin):
 
     def company(self):
         return self.company.name
+
+
+@admin.register(UserBucket)
+class UserBucketAdmin(admin.ModelAdmin):
+    list_display = ['name', 'user']

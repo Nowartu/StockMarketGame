@@ -2,12 +2,12 @@ from django.utils import timezone
 from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, DjangoModelPermissions
-from .serializers import OrderSerializer, CompanySerializer, TransactionSerializer, ProfileSerializer, UserStockSerializer, StockSerializer
+from .serializers import OrderSerializer, CompanySerializer, TransactionSerializer, ProfileSerializer, UserStockSerializer, StockSerializer, UserBucketSerializer
 from .models import Order, Company, Transaction, Stock
 from apps.events.models import Event
 from django.db.models import Q
 from django.db import transaction
-from ..users.models import UserProfile, UserStock
+from ..users.models import UserProfile, UserStock, UserBucket
 from datetime import date
 
 
@@ -97,3 +97,11 @@ class StockList(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gener
     def get_queryset(self):
         d = self.request.query_params.get('date', date.today())
         return Stock.objects.filter(date=d)
+
+
+class BucketViewSet(viewsets.ModelViewSet):
+    serializer_class = UserBucketSerializer
+    permission_classes = [IsOwner, DjangoModelPermissions]
+
+    def get_queryset(self):
+        return UserBucket.objects.filter(user=self.request.user.userprofile).prefetch_related("companies")

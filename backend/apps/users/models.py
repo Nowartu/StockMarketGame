@@ -1,6 +1,9 @@
 from django.contrib.auth.models import User
 from django.db import models
 
+from apps.market.models import Company
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="userprofile")
     nickname = models.CharField(max_length=50, unique=True)
@@ -30,3 +33,21 @@ class UserStock(models.Model):
 
     def __str__(self):
         return f'{self.user} {self.company}'
+
+
+class UserBucket(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="userbuckets")
+    name = models.CharField(max_length=50)
+    companies = models.ManyToManyField(Company)
+
+    class Meta:
+        db_table = '"user"."userbucket"'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'user'],
+                name='unique_user_bucketname'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} {self.name}'
